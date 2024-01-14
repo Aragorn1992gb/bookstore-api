@@ -13,6 +13,10 @@ echo "Creating superuser"
 python bookstore_api/manage.py createsuperuser --noinput
 # winpty python manage.py createsuperuser
 
+# Generate groups
+echo "Generate groups"
+python bookstore_api/manage.py populate_groups
+
 # Start server
 echo "Starting server"
 python bookstore_api/manage.py runserver 0.0.0.0:8000
