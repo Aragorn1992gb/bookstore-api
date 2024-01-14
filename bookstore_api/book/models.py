@@ -30,7 +30,7 @@ class Editor(models.Model):
 
 class Book(models.Model):
     title = models.CharField(max_length=255)
-    ISBN = models.CharField(max_length=13)
+    isbn = models.CharField(max_length=13)
     barcode = models.CharField(max_length=13)
     author = models.ForeignKey(Author, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=0)

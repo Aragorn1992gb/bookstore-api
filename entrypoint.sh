@@ -6,6 +6,7 @@ python bookstore_api/manage.py collectstatic --noinput
 
 echo "Apply database migrations"
 python bookstore_api/manage.py migrate
+python bookstore_api/manage.py migrate --database=mongo
 
 # Create Superuser
 echo "Creating superuser"
