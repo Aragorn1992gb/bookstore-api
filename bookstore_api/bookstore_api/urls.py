@@ -15,8 +15,34 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from bookstore_api.admin import admin_site
+from django.urls import path, include, re_path
+from django.conf.urls import url
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework.authentication import BasicAuthentication
+from dj_rest_auth.views import PasswordResetConfirmView
+
+schema_view = get_schema_view(
+   openapi.Info(
+      title="BOOKSTORE API",
+      default_version='v1',
+      description="BOOKSTORE API",
+   ),
+   public=True,
+   authentication_classes=(BasicAuthentication,),
+)
+
+admin.site.site_header = 'Bookstore API Administration'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    url(r'^swagger(?P<format>\.json|\.yaml)$',
+        schema_view.without_ui(cache_timeout=0),
+        name='schema-json'),
+    url(r'^swagger/$',
+        schema_view.with_ui('swagger', cache_timeout=0),
+        name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0),
+        name='schema-redoc'),
 ]

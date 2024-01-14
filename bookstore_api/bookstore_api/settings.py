@@ -38,6 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_yasg',
+    'corsheaders',
+    'dj_rest_auth',
+    'django_filters',
+    'rest_framework',
+    'rest_framework.authtoken',
     'book'
 ]
 
@@ -49,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # for staticfiles when DEBUG = False
 ]
 
 ROOT_URLCONF = 'bookstore_api.urls'
@@ -105,6 +112,16 @@ DJONGO_DATABASES = {
     }
 }
 
+SWAGGER_SETTINGS = {
+   'USE_SESSION_AUTH': False,
+   'SECURITY_DEFINITIONS': {
+     'Token': {
+       'type': 'apiKey',
+       'name': 'Authorization',
+       'in': 'header'
+     }
+   }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -140,7 +157,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_ROOT = "/usr/src/app/static/"
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
