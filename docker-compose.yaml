@@ -1,0 +1,70 @@
+version: "3"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    expose: 
+      - "8000"
+    volumes:
+      - .:/app
+    stdin_open: true
+    environment:
+        - CHOKIDAR_USEPOLLING=true
+        
+        - PGHOST=pgdb
+        - PGUSER=user_bookstore
+        - PGDATABASE=db_bookstore_dev
+        - PGPASSWORD=dev_bookstore
+        - PGPORT=5432
+
+        - MONGO_HOST=mongodb
+        - MONGO_DB=bookstore
+        - MONGO_USER=db_bookstore
+        - MONGO_PASSWORD=dev_bookstore
+
+    depends_on:
+      - pgdb
+      - mongodb
+
+  pgdb:
+      image: postgres:15
+      restart: always
+      environment:
+          - POSTGRES_DB=db_bookstore_dev
+          - DB_HOST=127.0.0.1
+          - POSTGRES_USER=user_bookstore
+          - POSTGRES_PASSWORD=dev_bookstore
+          - POSTGRES_ROOT_PASSWORD=dev_bookstore
+      volumes:
+          - pgdb-data:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+      GUNICORN_ACCESS_LOGFILE: '/dev/null'
+    ports:
+      - "5055:80"
+    logging:
+      driver: none
+
+  
+  mongodb:
+      image: mongo:7
+      restart: always
+      ports:
+        - '27017:27017'
+      volumes:
+        - mongodb-data:/var/lib/mongodb/data
+
+volumes:
+  pgdb-data:
+  mongodb-data:
+  
