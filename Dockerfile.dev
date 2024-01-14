@@ -1,0 +1,20 @@
+FROM python:3
+WORKDIR '/app'
+
+RUN pip install --upgrade pip
+RUN apt-get update
+RUN apt-get install libpq-dev -y
+
+RUN apt-get install net-tools
+RUN apt-get install vim -y
+
+COPY requirements.txt ./
+COPY bookstore_api/ ./
+RUN ls -ls 
+
+RUN pip install -r requirements.txt
+
+EXPOSE 8000
+
+# CMD ["python", "bookstore_api/manage.py", "runserver","0.0.0.0:8000"]
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]

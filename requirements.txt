@@ -1,0 +1,12 @@
+django >= 3.2.0, <3.3
+psycopg2>=2.9.1,<2.10.0 # for Postgresql
+djongo
+djangorestframework >= 3.12, < 3.13
+django-modeltranslation >=0.17, < 0.18
+django-cors-headers >=3.10.1, < 3.11
+django-filter >= 2.4.0, < 2.5 # using to execute queris with Django filters
+drf-yasg >=1.20.0, < 1.21 # for Swagger
+dj-rest-auth >= 2.2.2, < 2.3
+django-allauth >= 0.47.0, < 0.48
+django-admin-shortcuts
+rest_condition

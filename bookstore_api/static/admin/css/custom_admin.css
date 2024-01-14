@@ -1,0 +1,59 @@
+:root {
+    --secondary: #01444d;
+    --primary: #01444d;
+    --body-bg: #1d1d1d;
+}
+
+
+#header{
+  justify-content: inherit;
+  display: unset;
+}
+
+#branding img {
+    float: left;
+    display: inline-block;
+}
+
+#branding h1 {
+    padding: 20px 0 0 10px;
+    display: inline-block;
+}
+
+#branding a:visited{
+    color:white !important;
+}
+
+
+#user-tools {
+    padding: 30px 0 0 0;
+}
+
+@media (max-width: 1024px){
+    #user-tools {
+        padding: 26px 0 0 0;
+    }
+}
+
+.admin_shortcuts .shortcuts {
+    background: #1d1d1d !important;
+}
+
+.admin_shortcuts .shortcuts h2{
+    color: #ffffff !important;
+    border-bottom: 1px solid #ffffff !important;
+}
+
+.admin_shortcuts .shortcuts li a {
+    background: #01444d !important;
+}
+
+
+.dynamic-answer_set .original p {
+    font-size: 15px!important;
+}
+
+.dynamic-comment_set .original p {
+    font-size: 15px!important;
+}
+
