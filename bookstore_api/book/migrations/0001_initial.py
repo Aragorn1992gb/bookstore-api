@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=255)),
-                ('ISBN', models.CharField(max_length=13)),
+                ('isbn', models.CharField(max_length=13)),
                 ('barcode', models.CharField(max_length=13)),
                 ('quantity', models.PositiveIntegerField(default=0)),
                 ('note', models.CharField(blank=True, max_length=255, null=True)),
@@ -39,17 +39,6 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100)),
                 ('note', models.CharField(blank=True, max_length=255, null=True)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='BookDeletionHistory',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('price', models.DecimalField(blank=True, decimal_places=2, max_digits=5, null=True)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('reason', models.CharField(choices=[('1', 'Sold'), ('2', 'Lost'), ('3', 'Steal'), ('4', 'Destroyed')], default='1', max_length=1)),
-                ('note', models.CharField(blank=True, max_length=255, null=True)),
-                ('book', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='book.book')),
             ],
         ),
         migrations.AddField(

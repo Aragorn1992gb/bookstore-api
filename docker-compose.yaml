@@ -21,6 +21,11 @@ services:
         - PGPASSWORD=dev_bookstore
         - PGPORT=5432
 
+        - DB_HOST=pgdb
+        - POSTGRES_DB=db_bookstore_dev
+        - POSTGRES_USER=user_bookstore
+        - POSTGRES_PASSWORD=dev_bookstore
+
         - MONGO_HOST=mongodb
         - MONGO_DB=bookstore
         - MONGO_USER=db_bookstore
