@@ -26,6 +26,10 @@ services:
         - MONGO_USER=db_bookstore
         - MONGO_PASSWORD=dev_bookstore
 
+        - DJANGO_SUPERUSER_EMAIL=superadmin@admin.com
+        - DJANGO_SUPERUSER_USERNAME=admin
+        - DJANGO_SUPERUSER_PASSWORD=admin
+
     depends_on:
       - pgdb
       - mongodb
