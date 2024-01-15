@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-q1bvfhhb0s5812-!8to1gy6jtw%%^dd1qw+a=iq=64zqq27(dc'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -89,7 +89,6 @@ WSGI_APPLICATION = 'bookstore_api.wsgi.application'
 #     }
 # }
 
-# bookstore/bookstore/settings.py
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -99,18 +98,65 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
         'ATOMIC_REQUESTS': True
         # 'PORT': '5432',
-    }
+    },
+
+    # "nonrel": {
+    #     "ENGINE": "djongo",
+    #     "NAME": os.environ.get('MONGO_DB_NAME'),
+    #     "CLIENT": {
+    #         "host": os.environ.get('MONGO_DB_HOST'),
+    #         "port": 27017,
+    #         "username": os.environ.get('MONGO_DB_USERNAME'),
+    #         "password": os.environ.get('MONGO_DB_PASSWORD'),
+    #     },
+    #     'TEST': {
+    #         'MIRROR': 'default',
+    #     },
+    # }
+
+    # "mongo": {
+    #     "ENGINE": "djongo",
+    #     "NAME": os.environ.get('MONGO_DB'),
+    #     "CLIENT": {
+    #         "host": os.environ.get('MONGO_HOST'),
+    #         "port": 27017,
+    #         "username": os.environ.get('MONGO_USER'),
+    #         "password": os.environ.get('MONGO_PASSWORD'),
+    #     },
+    #     'TEST': {
+    #         'MIRROR': 'default',
+    #     },
+    # }
 }
 
 DJONGO_DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': os.environ.get('POSTGRES_HOST'),
-        'USER': os.environ.get('POSTGRES_USER'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'),
-    }
+        'NAME': os.environ.get('MONGO_DB'),
+        'USER': os.environ.get('MONGO_USER'),
+        'PASSWORD': os.environ.get('MONGO_PASSWORD'),
+        'HOST': os.environ.get('MONGO_HOST'),
+    },
+    'mongo': {
+        'ENGINE': 'djongo',
+        'NAME': os.environ.get('MONGO_DB'),
+        'USER': os.environ.get('MONGO_USER'),
+        'PASSWORD': os.environ.get('MONGO_PASSWORD'),
+        'HOST': os.environ.get('MONGO_HOST'),
+    },
 }
+
+# DJONGO_DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'your_mongo_database_name',
+#     },
+#     'mongo': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'your_mongo_database_name',
+#     },
+# }
+
 
 SWAGGER_SETTINGS = {
    'USE_SESSION_AUTH': False,

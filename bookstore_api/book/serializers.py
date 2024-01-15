@@ -3,6 +3,9 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from .models import Book, Author, Editor
 from django.db.models import Q
+from pymongo import MongoClient
+
+REASON_TYPE_CHOICES = ["Sold", "Lost", "Stolen", "Other"]
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -12,7 +15,7 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
-        read_only_fields =('id', 'title', 'isbn', 'barcode', 'author', 'editor', 'note')
+        read_only_fields =('id', 'title', 'isbn', 'barcode', 'author', 'editor', 'note',)
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -42,5 +45,26 @@ class BookUpdateAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
-        read_only_fields =('id')
+        read_only_fields =('id',)
 
+
+class RemoveBookSerializer(serializers.Serializer):
+    """
+    Serializers class for update history of the book on mongodb
+    """
+    id_book = serializers.IntegerField()
+    quantity = serializers.IntegerField()
+    single_price = serializers.IntegerField()
+    reason = serializers.CharField(max_length=50)
+    note = serializers.CharField(allow_null=True, allow_blank=True)
+
+    class Meta:
+             fields = "__all__"
+             read_only_fields =('id',)
+
+    def validate(self, attrs):
+        if attrs["reason"] not in REASON_TYPE_CHOICES:
+            raise serializers.ValidationError({"reason": f"you can select a reason that exists in this list {REASON_TYPE_CHOICES}"})
+        if attrs["quantity"] <= 0:
+             raise serializers.ValidationError({"quantity": f"you must choose a quantity >0"})
+        return attrs
