@@ -11,3 +11,4 @@ django-allauth >= 0.47.0, < 0.48
 django-admin-shortcuts
 rest_condition
 whitenoise # for staticfiles when DEBUG = False
+pymongo
