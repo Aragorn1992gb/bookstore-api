@@ -2,7 +2,6 @@ from wsgiref import validate
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from .models import Book, Author, Editor
-from django.db.models import Q
 
 # Reason type of the book in which a reducing of the quantity is required
 REASON_TYPE_CHOICES = ["Sold", "Lost", "Stolen", "Other"]
@@ -59,12 +58,15 @@ class RemoveBookSerializer(serializers.Serializer):
     note = serializers.CharField(allow_null=True, allow_blank=True)
 
     class Meta:
-             fields = "__all__"
-             read_only_fields =('id',)
+        fields = "__all__"
+        read_only_fields =('id',)
 
+    """ Fields Validation of the RemoveBookSerializer"""
     def validate(self, attrs):
         if attrs["reason"] not in REASON_TYPE_CHOICES:
-            raise serializers.ValidationError({"reason": f"you can select a reason that exists in this list {REASON_TYPE_CHOICES}"})
+            raise serializers.ValidationError({"reason": "you can select a reason that exists "
+                                                f"in this list {REASON_TYPE_CHOICES}"})
         if attrs["quantity"] <= 0:
-             raise serializers.ValidationError({"quantity": f"you must choose a quantity >0"})
+            raise serializers.ValidationError({"quantity": "you must choose a quantity >0"})
         return attrs
+        

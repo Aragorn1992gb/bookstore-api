@@ -11,6 +11,7 @@ DELETE_CHOICES = [
 ]
 
 
+""" Model that contains info about book's author """
 class Author(models.Model):
     name = models.CharField(max_length=100)
     surname = models.CharField(max_length=100, blank=True, null=True)
@@ -20,14 +21,16 @@ class Author(models.Model):
         return self.name
 
 
+""" Model that contains info about book's editor """
 class Editor(models.Model):
     name = models.CharField(max_length=100)
     note = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.name
-    
 
+
+""" Model that contains info about book """
 class Book(models.Model):
     title = models.CharField(max_length=255)
     isbn = models.CharField(max_length=13)
@@ -50,4 +53,3 @@ class Book(models.Model):
 
 #     def __str__(self):
 #         return f"Price: {self.price} for {self.book.title} at {self.timestamp}"
-

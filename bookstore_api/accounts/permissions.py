@@ -1,5 +1,7 @@
 from rest_framework import permissions
 
+
+""" Create Permission for user type ADMIN """
 class AdminPermission(permissions.BasePermission):
     edit_methods = ("PUT", "PATCH", "GET", "LIST")
 
@@ -9,6 +11,7 @@ class AdminPermission(permissions.BasePermission):
         return False
 
 
+""" Create Permission for user type STOCK_MANAGER """
 class StockManagerPermission(permissions.BasePermission):
     edit_methods = ("PUT", "PATCH", "GET", "LIST")
 
