@@ -137,6 +137,8 @@ class RemoveBookView(APIView):
                 data = request.data
                 
                 removebook_serializer = RemoveBookSerializer(data=data, many=True)
+                zero_books = []
+
                 if not removebook_serializer.is_valid():
                     logger.info(removebook_serializer.errors)
                     return Response(data={"Error: body structure not acceptable"}, status=status.HTTP_406_NOT_ACCEPTABLE)
@@ -151,12 +153,24 @@ class RemoveBookView(APIView):
                         return Response(data={"Error: quantity to decrease must be >= to the current quantity"}, status=status.HTTP_406_NOT_ACCEPTABLE)
                     book.quantity = new_quantity
                     book.save()
+                    if new_quantity == 0:
+                        zero_books.append(book.id)
+
                     document_list.append({"book_id": r["id_book"], "book": book.title, "single_price": r["single_price"], "timestamp": datetime.now(), "quantity": r["quantity"], "reason": r["reason"], "note": r["note"]})
                     # collection.insert_one({"book_id": r["id_book"], "book": book.title, "single_price": r["single_price"], "timestamp": datetime.now(), "quantity": r["quantity"], "reason": r["reason"], "note": r["note"]})
                 
                 # Mongodb doesn't born with the aim to be compliant to ACID. In order to avoid transaction, that are not in Mongo's nature, I use insert_many after every operation on postgresql is made (outside the for loop)
                 # If something wrong on postgresql, an ecception is sent and it doesn't execute insert_many. If insert_many has exeption, it sent an Exception and, thanks to "with transaction.atomic():", operation are reverted on Postgresql.
                 collection.insert_many(document_list)
+
+                # TODO when the microservice is ready, it will be called from here for each book with quantity = 0. Ideally, the service will expose an API and all the requests
+                # to this api will be put in a Queue (for example in a cloud task). I assume that the request is a GET, with a query parameter with the id of the book.
+                # In this case the service notifire has the id of the book and it can get all the info of the book using the api /book/{id}, but a it is possible to create a notifier-service
+                # that accept more input parameters, in order to already get the info of the books. This approach is useful if the notification is sent immediately. If the notification is sent
+                # after days, the book details may change (for example the stock manager add more quantity).
+                for zb in zero_books:
+                    logging.info(f"## Book {zb} to be ordered")
+                    # task_module.create_task_get(f"{service_notifier_api}?id_book={zb}", self.context["request"].META.get('HTTP_AUTHORIZATION'), os.environ.get('QUEUE'))
 
                 return Response(data="Books removed succesfully. History stored", status=status.HTTP_200_OK)
         except Exception as ex:
