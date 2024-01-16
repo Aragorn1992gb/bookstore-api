@@ -153,6 +153,7 @@ class RemoveBookView(APIView):
                     book.save()
                     document_list.append({"book_id": r["id_book"], "book": book.title, "single_price": r["single_price"], "timestamp": datetime.now(), "quantity": r["quantity"], "reason": r["reason"], "note": r["note"]})
                     # collection.insert_one({"book_id": r["id_book"], "book": book.title, "single_price": r["single_price"], "timestamp": datetime.now(), "quantity": r["quantity"], "reason": r["reason"], "note": r["note"]})
+                
                 # Mongodb doesn't born with the aim to be compliant to ACID. In order to avoid transaction, that are not in Mongo's nature, I use insert_many after every operation on postgresql is made (outside the for loop)
                 # If something wrong on postgresql, an ecception is sent and it doesn't execute insert_many. If insert_many has exeption, it sent an Exception and, thanks to "with transaction.atomic():", operation are reverted on Postgresql.
                 collection.insert_many(document_list)
