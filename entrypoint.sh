@@ -6,12 +6,10 @@ python bookstore_api/manage.py collectstatic --noinput
 
 echo "Apply database migrations"
 python bookstore_api/manage.py migrate
-python bookstore_api/manage.py migrate --database=mongo
 
 # Create Superuser
 echo "Creating superuser"
 python bookstore_api/manage.py createsuperuser --noinput
-# winpty python manage.py createsuperuser
 
 # Generate groups
 echo "Generate groups"
