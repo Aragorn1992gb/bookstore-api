@@ -37,6 +37,8 @@ services:
         - DJANGO_SUPERUSER_USERNAME=admin
         - DJANGO_SUPERUSER_PASSWORD=admin
 
+        - PROJECT_ENV=dev
+
     depends_on:
       - pgdb
       - mongodb

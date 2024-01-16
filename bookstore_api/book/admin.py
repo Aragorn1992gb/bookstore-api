@@ -28,7 +28,6 @@ from django.utils.translation import gettext as _
 #     inlines = [AuthorInLine, EditorInLine]
 #     model = Book
 #     search_fields = ['title', 'author', 'editor', 'isbn', 'barcode', 'quantity', 'note']
-    
 
 # Register your models here.
 admin.site.register(Book)
