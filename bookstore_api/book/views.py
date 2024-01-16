@@ -8,6 +8,9 @@ from rest_condition import Or
 from datetime import datetime
 from rest_framework.views import APIView
 from django.db import transaction
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING, TYPE_ARRAY, TYPE_INTEGER, TYPE_NUMBER
 
 from accounts import permissions as user_permissions
 from .services import create_mongo_connection
@@ -20,6 +23,28 @@ logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 logger.addHandler(handler)
+
+
+REMOVE_BOOK_SCHEMA_SINGLE= openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'id_book': openapi.Schema(type=TYPE_INTEGER),
+        'quantity': openapi.Schema(type=TYPE_INTEGER),
+        'single_price': openapi.Schema(type=TYPE_NUMBER),
+        'reason': openapi.Schema(type=TYPE_STRING),
+        'note': openapi.Schema(type=TYPE_STRING)
+    })
+
+# Schema of the customized view. This schema will be taken by swagger in order to describe the input of remove-book
+REMOVE_BOOK_SCHEMA= openapi.Schema(
+    type=openapi.TYPE_ARRAY,
+    items= {
+        "oneOf": [
+            REMOVE_BOOK_SCHEMA_SINGLE,
+            REMOVE_BOOK_SCHEMA_SINGLE
+        ]
+    }
+)
 
 
 class BookView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin,
@@ -88,25 +113,22 @@ class RemoveBookView(APIView):
     permission_classes = (permissions.IsAuthenticated, user_permissions.StockManagerPermission)
     serialzier = RemoveBookSerializer
 
+
+    @swagger_auto_schema(request_body=REMOVE_BOOK_SCHEMA, 
+        responses={status.HTTP_200_OK: "'Books removed succesfully. History stored'. Everything is ok, book quantity is decreased but the history record is saved on mongodb",
+                    status.HTTP_406_NOT_ACCEPTABLE: "'Error: body structure not acceptable'. The structure of the input json is not acceptable. It can be related to the decimal operator (should be dot)\
+                    or to the wrong attributes given. \n 'Error: quantity to decrease must be >= to the current quantity'. Means that the quantity to be substracted is more than the actual quantity."})
     def post(self, request):
+        """
+        This API is used to decrease the quantity of a certain book or list of books. When the quantity is reduced, the history for each book is saved in mongodb.\n\n
+        Required parameters are:\n
+        id_book -> [Integer] represent the id of the book to decrease
+        quantity -> [Integer] the quantity to decrease (must be a number >0 and >= remaining quantity)
+        single_price -> [Decimal] the price for the single book (decimal; only . is allowed as decimal separator; only 2 decimal values)
+        reason -> [String] the reason of the decrement of the book. You can choose: only "Sold", "Lost", "Stolen", "Other"
+        note -> [String] a sapce to put some annotation (can be empty)
+        """ 
         try:
-            """
-            request = [{
-                "id_book": 1,
-                "quantity": 3,
-                "single_price": 1,
-                "reason": "Sold",
-                "note": ""
-            },
-            {
-                "id_book": 12,
-                "quantity": 1,
-                "single_price": 10,
-                "reason": "Lost",
-                "note": ""
-            },
-            ]
-            """
 
             db = create_mongo_connection()
             collection = db.history_book
@@ -135,7 +157,7 @@ class RemoveBookView(APIView):
                 # If something wrong on postgresql, an ecception is sent and it doesn't execute insert_many. If insert_many has exeption, it sent an Exception and, thanks to "with transaction.atomic():", operation are reverted on Postgresql.
                 collection.insert_many(document_list)
 
-                return Response(data="OK", status=status.HTTP_200_OK)
+                return Response(data="Books removed succesfully. History stored", status=status.HTTP_200_OK)
         except Exception as ex:
             logger.error(f"# {self.__class__.__name__} exception {ex}")
             return Response(data={"Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -5,6 +5,7 @@ from .models import Book, Author, Editor
 from django.db.models import Q
 from pymongo import MongoClient
 
+# Reason type of the book in which a reducing of the quantity is required
 REASON_TYPE_CHOICES = ["Sold", "Lost", "Stolen", "Other"]
 
 
@@ -54,7 +55,7 @@ class RemoveBookSerializer(serializers.Serializer):
     """
     id_book = serializers.IntegerField()
     quantity = serializers.IntegerField()
-    single_price = serializers.IntegerField()
+    single_price = serializers.DecimalField(max_digits=5, decimal_places=2)
     reason = serializers.CharField(max_length=50)
     note = serializers.CharField(allow_null=True, allow_blank=True)
 
