@@ -3,7 +3,6 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from .models import Book, Author, Editor
 from django.db.models import Q
-from pymongo import MongoClient
 
 # Reason type of the book in which a reducing of the quantity is required
 REASON_TYPE_CHOICES = ["Sold", "Lost", "Stolen", "Other"]

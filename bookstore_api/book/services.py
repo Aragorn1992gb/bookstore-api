@@ -9,7 +9,8 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
+# create connection to mongo at the specified url and port
 def create_mongo_connection():
-    client = MongoClient(os.getenv("MONGO_ROOT"), int(os.getenv("MONGO_PORT")))
+    client = MongoClient(os.getenv("MONGO_URL"), int(os.getenv("MONGO_PORT")))
     db = client.mongo_bookstore
     return db

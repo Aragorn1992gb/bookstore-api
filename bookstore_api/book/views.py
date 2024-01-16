@@ -50,10 +50,13 @@ REMOVE_BOOK_SCHEMA= openapi.Schema(
 class BookView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin):
     """
-    View retrieve apis for the managing of the book (list, update book quantity only)
+    View retrieve apis for the managing of the Book. 
+    The GET method return the books list or the details of a specific book, chosen by id
+    The PUT and PATCH method allows to update only the quantity of the books
+    Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = BookSerializer
-    authentication_classes = (authentication.TokenAuthentication,)
+    authentication_classes = (authentication.TokenAuthentication, Or(user_permissions.StockManagerPermission, user_permissions.AdminPermission))
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Book.objects.all()
 
@@ -61,9 +64,12 @@ class BookView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
 class AuthorView(viewsets.GenericViewSet, mixins.ListModelMixin):
     """
     View retrieve apis for list the Authors
+    The GET method return the author list or the details of a specific author, chosen by id
+    The PUT and PATCH method allows to update the author
+    Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = AuthorSerializer
-    authentication_classes = (authentication.TokenAuthentication,)
+    authentication_classes = (authentication.TokenAuthentication, Or(user_permissions.StockManagerPermission, user_permissions.AdminPermission))
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Author.objects.all()    
 
@@ -71,16 +77,22 @@ class AuthorView(viewsets.GenericViewSet, mixins.ListModelMixin):
 class EditorView(viewsets.GenericViewSet, mixins.ListModelMixin):
     """
     View retrieve apis for list the Editors
+    The GET method return the editors list or the details of a specific editor, chosen by id
+    The PUT and PATCH method allows to update the editor
+    Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = EditorSerializer
-    authentication_classes = (authentication.TokenAuthentication,)
+    authentication_classes = (authentication.TokenAuthentication, Or(user_permissions.StockManagerPermission, user_permissions.AdminPermission))
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Editor.objects.all()    
 
 
 class ManageBookAdminView(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.CreateModelMixin):
     """
-    View retrieve apis for the teh creation of the Book and for managing the other fields of Book
+    View retrieve apis for the the creation of the Book and for managing the other fields of Book
+    The POST method allow to create a new book record. It must refer to an existing Author and Editor
+    The PUT and PATCH method allows to update all the book fields
+    Only ADMIN users can execute those APIs
     """
     serializer_class = BookUpdateAdminSerializer
     authentication_classes = (authentication.TokenAuthentication,)
@@ -91,6 +103,9 @@ class ManageBookAdminView(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixi
 class ManageAuthorAdminView(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.CreateModelMixin):
     """
     View retrieve apis for the teh creation of the Author and for managing the other fields of Author
+    The POST method allow to create a new author record
+    The PUT and PATCH method allows to update all the author fields
+    Only ADMIN users can execute those APIs
     """
     serializer_class = AuthorSerializer
     authentication_classes = (authentication.TokenAuthentication,)
@@ -101,6 +116,9 @@ class ManageAuthorAdminView(viewsets.GenericViewSet, mixins.UpdateModelMixin, mi
 class ManageEditorAdminView(viewsets.GenericViewSet, mixins.UpdateModelMixin, mixins.CreateModelMixin):
     """
     View retrieve apis for the teh creation of the Editor and for managing the other fields of Editor
+    The POST method allow to create a new editor record
+    The PUT and PATCH method allows to update all the editor fields
+    Only ADMIN users can execute those APIs
     """
     serializer_class = EditorSerializer
     authentication_classes = (authentication.TokenAuthentication,)
@@ -109,6 +127,15 @@ class ManageEditorAdminView(viewsets.GenericViewSet, mixins.UpdateModelMixin, mi
 
 
 class RemoveBookView(APIView):
+    """
+    It is used to decrease the quantity of a certain book or list of books. When the quantity is reduced, the history for each book is saved in mongodb.\n\n
+    Required parameters are:\n
+    id_book -> [Integer] represent the id of the book to decrease
+    quantity -> [Integer] the quantity to decrease (must be a number >0 and >= remaining quantity)
+    single_price -> [Decimal] the price for the single book (decimal; only . is allowed as decimal separator; only 2 decimal values)
+    reason -> [String] the reason of the decrement of the book. You can choose: only "Sold", "Lost", "Stolen", "Other"
+    note -> [String] a sapce to put some annotation (can be empty)
+    """ 
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated, user_permissions.StockManagerPermission)
     serialzier = RemoveBookSerializer
@@ -119,15 +146,7 @@ class RemoveBookView(APIView):
                     status.HTTP_406_NOT_ACCEPTABLE: "'Error: body structure not acceptable'. The structure of the input json is not acceptable. It can be related to the decimal operator (should be dot)\
                     or to the wrong attributes given. \n 'Error: quantity to decrease must be >= to the current quantity'. Means that the quantity to be substracted is more than the actual quantity."})
     def post(self, request):
-        """
-        This API is used to decrease the quantity of a certain book or list of books. When the quantity is reduced, the history for each book is saved in mongodb.\n\n
-        Required parameters are:\n
-        id_book -> [Integer] represent the id of the book to decrease
-        quantity -> [Integer] the quantity to decrease (must be a number >0 and >= remaining quantity)
-        single_price -> [Decimal] the price for the single book (decimal; only . is allowed as decimal separator; only 2 decimal values)
-        reason -> [String] the reason of the decrement of the book. You can choose: only "Sold", "Lost", "Stolen", "Other"
-        note -> [String] a sapce to put some annotation (can be empty)
-        """ 
+
         try:
 
             db = create_mongo_connection()
