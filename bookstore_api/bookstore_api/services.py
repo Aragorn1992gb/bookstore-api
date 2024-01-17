@@ -51,3 +51,4 @@ def save_notification_on_mongo(message, collection, datenow, delivered):
         'delivered': delivered
     }
     collection.insert_one(notification_data)
+    
