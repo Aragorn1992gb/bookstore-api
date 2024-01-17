@@ -173,6 +173,7 @@ class RemoveBookView(APIView):
 
             with transaction.atomic():
                 data = request.data
+                datenow = datetime.utcnow()
 
                 removebook_serializer = RemoveBookSerializer(data=data, many=True)
                 zero_books = []
@@ -199,7 +200,7 @@ class RemoveBookView(APIView):
 
                     document_list.append({"book_id": torem_book["id_book"], "book": book.title,
                                             "single_price": torem_book["single_price"],
-                                            "timestamp": datetime.now(), "quantity": torem_book["quantity"],
+                                            "timestamp": datenow, "quantity": torem_book["quantity"],
                                             "reason": torem_book["reason"], "note": torem_book["note"]})
                     # collection_history.insert_one({"book_id": torem_book["id_book"], "book": book.title, "single_price": torem_book["single_price"], "timestamp": datetime.now(), "quantity": torem_book["quantity"], "reason": torem_book["reason"], "note": torem_book["note"]})
                 
@@ -214,10 +215,10 @@ class RemoveBookView(APIView):
                 # after days, the book details may change (for example the stock manager add more quantity).
                 for zb in zero_books:
                     channel = create_rabbitmq_connection()
-                    body=f"Book '{zb}' is out of stock!"
-                    logging.info("## Book %s to be ordered", zb)
+                    body=f"Book no#'{zb}' is out of stock!"
+                    logging.info("## Book %s to be ordered - %s", zb, datenow)
                     publish_notification(channel, routing_key, body)
-                    save_notification_on_mongo(body, collection_notification)
+                    save_notification_on_mongo(body, collection_notification, datenow)
                     # task_module.create_task_get(f"{service_notifier_api}?id_book={zb}", self.context["request"].META.get('HTTP_AUTHORIZATION'), os.environ.get('QUEUE'))
 
                 return Response(data="Books removed succesfully. History stored", status=status.HTTP_200_OK)

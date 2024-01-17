@@ -1,4 +1,3 @@
-from datetime import datetime
 import logging
 import os
 
@@ -26,7 +25,7 @@ def create_rabbitmq_connection():
     channel = connection.channel()
 
     # Declare a queue
-    channel.queue_declare(queue=os.getenv("RABBIT_MQ_OOO_BOOKS_QUEUE"))
+    channel.queue_declare(queue=os.getenv("RABBIT_MQ_OOO_BOOKS_QUEUE"), durable=True)
     return channel
 
 
@@ -35,17 +34,21 @@ def publish_notification(channel, routing_key, body):
     logger.info("# Publishing...")
     channel.basic_publish(exchange='',
                           routing_key=routing_key,
-                          body=body)
+                          body=body,
+                           properties=pika.BasicProperties(
+                            delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE,
+                            # priority=headers.priority.value,
+                            # headers=headers.dict(),
+                            ))
 
     logger.info("# Sent notification for %s", body)
 
 
 # def save_notification_on_mongo(ch, method, properties, body):
-def save_notification_on_mongo(message, collection):
+def save_notification_on_mongo(message, collection, datenow):
     # Process the message and persist in MongoDB
     notification_data = {
-        # 'message': body.decode(),
         'message': message,
-        'timestamp': datetime.now()
+        'timestamp': datenow
     }
     collection.insert_one(notification_data)
