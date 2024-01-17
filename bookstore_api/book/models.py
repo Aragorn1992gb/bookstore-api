@@ -2,6 +2,8 @@ from django.db import models
 # from djongo import models as mongo_models
 from django.utils.translation import gettext_lazy as _
 
+from .validators import validate_isbn, validate_barcode
+
 
 # DELETE_CHOICES = [
 #     ("1", _("Sold")),
@@ -43,8 +45,8 @@ class Editor(models.Model):
 """ Model that contains info about book """
 class Book(models.Model):
     title = models.CharField(max_length=255)
-    isbn = models.CharField(max_length=13)
-    barcode = models.CharField(max_length=13)
+    isbn = models.CharField(max_length=13, validators=[validate_isbn])
+    barcode = models.CharField(max_length=13, validators=[validate_barcode])
     author = models.ForeignKey(Author, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField(default=0)
     editor = models.ForeignKey(Editor, on_delete=models.PROTECT, blank=True, null=True)
