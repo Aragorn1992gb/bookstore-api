@@ -291,8 +291,6 @@ class AddBookView(APIView):
         try:
             data = request.data
 
-            logger.info("###sad %s",data)
-
             datenow = datetime.utcnow()
             addbook_serializer = AddBookSerializer(data=data, many=True)
             document_list = []
