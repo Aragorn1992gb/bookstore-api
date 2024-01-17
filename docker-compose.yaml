@@ -53,9 +53,29 @@ services:
         - mongodb-data:/var/lib/mongodb/data
 
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - rabbitmq-data:/var/lib/rabbitmq
+        - rabbitmq-log:/var/log/rabbitmq
+    # networks:
+    #     - rabbitmq_go_net
+    # if you want to put network: https://stackoverflow.com/questions/71033283/using-pika-how-to-connect-to-rabbitmq-running-in-docker-started-with-docker-co
+
+
 volumes:
   pgdb-data:
   mongodb-data:
+  rabbitmq-data:
+  rabbitmq-log:
+
+
+# networks:
+#   rabbitmq_go_net:
+#     driver: bridge
   
-networks:
-  db_network:
+# networks:
+#   db_network:

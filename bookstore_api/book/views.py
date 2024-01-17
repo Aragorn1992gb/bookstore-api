@@ -13,11 +13,12 @@ from rest_condition import Or
 from rest_framework.views import APIView
 
 from accounts import permissions as user_permissions
+from bookstore_api.services import create_mongo_connection, create_rabbitmq_connection, \
+        publish_notification, save_notification_on_mongo
 from .models import Book, Author, Editor
 from .serializers import BookSerializer, AuthorSerializer, EditorSerializer, \
      BookUpdateAdminSerializer, RemoveBookSerializer
 
-from .services import create_mongo_connection
 
 logger = logging.getLogger('book views')
 logger.setLevel(logging.INFO)
@@ -166,7 +167,9 @@ class RemoveBookView(APIView):
         try:
 
             mongodb_connection = create_mongo_connection()
-            collection = mongodb_connection.history_book
+            collection_history = mongodb_connection.history_book
+            collection_notification = mongodb_connection.notification
+            routing_key="book_ooo_notifications"
 
             with transaction.atomic():
                 data = request.data
@@ -185,7 +188,6 @@ class RemoveBookView(APIView):
                     book = Book.objects.get(id=torem_book["id_book"])
                     new_quantity = book.quantity - torem_book["quantity"]
                     if new_quantity <0:
-                        print("### a")
                         logger.error("### %s exception: quantity to decrease must be >= "
                                         "to the current quantity", self.__class__.__name__)
                         return Response(data={"Error: quantity to decrease must be >= to the "
@@ -199,11 +201,11 @@ class RemoveBookView(APIView):
                                             "single_price": torem_book["single_price"],
                                             "timestamp": datetime.now(), "quantity": torem_book["quantity"],
                                             "reason": torem_book["reason"], "note": torem_book["note"]})
-                    # collection.insert_one({"book_id": torem_book["id_book"], "book": book.title, "single_price": torem_book["single_price"], "timestamp": datetime.now(), "quantity": torem_book["quantity"], "reason": torem_book["reason"], "note": torem_book["note"]})
+                    # collection_history.insert_one({"book_id": torem_book["id_book"], "book": book.title, "single_price": torem_book["single_price"], "timestamp": datetime.now(), "quantity": torem_book["quantity"], "reason": torem_book["reason"], "note": torem_book["note"]})
                 
                 # Mongodb doesn't born with the aim to be compliant to ACID. In order to avoid transaction, that are not in Mongo's nature, I use insert_many after every operation on postgresql is made (outside the for loop)
                 # If something wrong on postgresql, an ecception is sent and it doesn't execute insert_many. If insert_many has exeption, it sent an Exception and, thanks to "with transaction.atomic():", operation are reverted on Postgresql.
-                collection.insert_many(document_list)
+                collection_history.insert_many(document_list)
 
                 # TODO when the microservice is ready, it will be called from here for each book with quantity = 0. Ideally, the service will expose an API and all the requests
                 # to this api will be put in a Queue (for example in a cloud task). I assume that the request is a GET, with a query parameter with the id of the book.
@@ -211,7 +213,11 @@ class RemoveBookView(APIView):
                 # that accept more input parameters, in order to already get the info of the books. This approach is useful if the notification is sent immediately. If the notification is sent
                 # after days, the book details may change (for example the stock manager add more quantity).
                 for zb in zero_books:
+                    channel = create_rabbitmq_connection()
+                    body=f"Book '{zb}' is out of stock!"
                     logging.info("## Book %s to be ordered", zb)
+                    publish_notification(channel, routing_key, body)
+                    save_notification_on_mongo(body, collection_notification)
                     # task_module.create_task_get(f"{service_notifier_api}?id_book={zb}", self.context["request"].META.get('HTTP_AUTHORIZATION'), os.environ.get('QUEUE'))
 
                 return Response(data="Books removed succesfully. History stored", status=status.HTTP_200_OK)
