@@ -264,6 +264,13 @@ class NotEnoughQuantity(APIException):
     default_code = "no_enough"
 
 
+class BodyStructureNotAcceptable(APIException):
+    status_code = status.HTTP_406_NOT_ACCEPTABLE
+    default_detail = _("Error: body structure not acceptable")
+    default_code = "body_structure_not_acceptable"
+
+
+
 def server_error(request, *args, **kwargs):
     """
     Generic 500 error handler.
