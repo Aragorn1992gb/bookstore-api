@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from accounts import permissions as user_permissions
 from bookstore_api.services import create_mongo_connection, create_rabbitmq_connection, \
         publish_notification, save_notification_on_mongo
+from bookstore_api.exceptions import NotEnoughQuantity
 from .models import Book, Author, Editor
 from .serializers import BookSerializer, AuthorSerializer, EditorSerializer, \
      BookUpdateAdminSerializer, RemoveBookSerializer
@@ -191,8 +192,7 @@ class RemoveBookView(APIView):
                     if new_quantity <0:
                         logger.error("### %s exception: quantity to decrease must be >= "
                                         "to the current quantity", self.__class__.__name__)
-                        return Response(data={"Error: quantity to decrease must be >= to the "
-                                        "current quantity"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                        raise NotEnoughQuantity
                     book.quantity = new_quantity
                     book.save()
                     if new_quantity == 0:
@@ -221,8 +221,11 @@ class RemoveBookView(APIView):
                     save_notification_on_mongo(body, collection_notification, datenow)
                     # task_module.create_task_get(f"{service_notifier_api}?id_book={zb}", self.context["request"].META.get('HTTP_AUTHORIZATION'), os.environ.get('QUEUE'))
 
-                return Response(data="Books removed succesfully. History stored", status=status.HTTP_200_OK)
+                return Response(data={"Books removed succesfully. History stored"}, status=status.HTTP_200_OK)
 
         except Exception as ex:
             logger.error("# %s exception %s", self.__class__.__name__, ex)
-            return Response(data={"Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(data={"Error. Are you sure that quantity is enough?"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # except "Lowquantity":
+        #     return Response(data={"Error: quantity to decrease must be >= to the "
+        #                                 "current quantity"}, status=status.HTTP_406_NOT_ACCEPTABLE)
