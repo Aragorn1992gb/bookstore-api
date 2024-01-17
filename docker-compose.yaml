@@ -53,9 +53,32 @@ services:
         - mongodb-data:/var/lib/mongodb/data
 
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    # hostname: 'mabbit'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        # - '~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/mnesia/'
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    # usr guest psw guest
+    # networks:
+    #     - rabbitmq_go_net
+    # if you want to put network: https://stackoverflow.com/questions/71033283/using-pika-how-to-connect-to-rabbitmq-running-in-docker-started-with-docker-co
+
+
 volumes:
   pgdb-data:
   mongodb-data:
+  rabbitmq-data:
+  rabbitmq-log:
+
+
+# networks:
+#   rabbitmq_go_net:
+#     driver: bridge
   
-networks:
-  db_network:
+# networks:
+#   db_network:
