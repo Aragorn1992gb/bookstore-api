@@ -196,41 +196,48 @@ class RemoveBookView(APIView):
                     if new_quantity == 0:
                         zero_books.append(book.id)
 
-                    document_list.append({"book_id": torem_book["id_book"], "book": book.title,
+                    document_list.append({"book_id": torem_book["id_book"],
+                                            "book": book.title,
                                             "single_price": torem_book["single_price"],
-                                            "timestamp": datenow, "quantity": torem_book["quantity"],
-                                            "reason": torem_book["reason"], "note": torem_book["note"]})
+                                            "timestamp": datenow,
+                                            "quantity": torem_book["quantity"],
+                                            "reason": torem_book["reason"],
+
+                                            "note": torem_book["note"]})
                     # collection_history.insert_one({"book_id": torem_book["id_book"], "book": book.title, "single_price": torem_book["single_price"], "timestamp": datetime.now(), "quantity": torem_book["quantity"], "reason": torem_book["reason"], "note": torem_book["note"]})
                 
                 # Mongodb doesn't born with the aim to be compliant to ACID. In order to avoid transaction, that are not in Mongo's nature, I use insert_many after every operation on postgresql is made (outside the for loop)
                 # If something wrong on postgresql, an ecception is sent and it doesn't execute insert_many. If insert_many has exeption, it sent an Exception and, thanks to "with transaction.atomic():", operation are reverted on Postgresql.
                 collection_history.insert_many(document_list)
 
-                # TODO when the microservice is ready, it will be called from here for each book with quantity = 0. Ideally, the service will expose an API and all the requests
-                # to this api will be put in a Queue (for example in a cloud task). I assume that the request is a GET, with a query parameter with the id of the book.
-                # In this case the service notifire has the id of the book and it can get all the info of the book using the api /book/{id}, but a it is possible to create a notifier-service
-                # that accept more input parameters, in order to already get the info of the books. This approach is useful if the notification is sent immediately. If the notification is sent
-                # after days, the book details may change (for example the stock manager add more quantity).
+                # For every upgraded book to 0, it push a message on RabbitMQ to
+                # allow the notification server to consume the message and send the notification.
+                # The notification is also saved on django in order to be stored
+                # in case RabbitMQ is unavailable
                 for zb in zero_books:
-                    channel = create_rabbitmq_connection()
                     body=f"Book no#'{zb}' is out of stock!"
-                    logging.info("## Book %s to be ordered - %s", zb, datenow)
-                    publish_notification(channel, routing_key, body)
-                    save_notification_on_mongo(body, collection_notification, datenow)
-                    # task_module.create_task_get(f"{service_notifier_api}?id_book={zb}", self.context["request"].META.get('HTTP_AUTHORIZATION'), os.environ.get('QUEUE'))
-
-                return Response(data={"Books removed succesfully. History stored"}, status=status.HTTP_200_OK)
+                    logging.info("## Book %s to be booked - %s", zb, datenow)
+                    try:
+                        channel = create_rabbitmq_connection()
+                        publish_notification(channel, routing_key, body)
+                        save_notification_on_mongo(body, collection_notification, datenow, "yes")
+                    except:
+                        logger.error("# RabbitMQ is unavailable")
+                        # In case RabbitMQ is unavailable, the notify is sent to Mongo as "Not delivered"
+                        save_notification_on_mongo(body, collection_notification, datenow, "no")
+                        pass
+                return Response(data={"Books removed succesfully. History stored"},
+                            status=status.HTTP_200_OK)
         except NotEnoughQuantity:
             logger.error("# %s exception: quantity to decrease must be >= "
                                         "to the current quantity", self.__class__.__name__)
             return Response(data={"Error: Not Enough quantity. Quantity to decrease must "
-                                    "be >= to the current quantity?"}, 
+                                    "be >= to the current quantity?"},
                                     status=status.HTTP_406_NOT_ACCEPTABLE)
         except BodyStructureNotAcceptable:
             logger.error(removebook_serializer.errors)
-            return Response(data={"Error: body structure not acceptable"}, 
+            return Response(data={"Error: body structure not acceptable"},
                                     status=status.HTTP_406_NOT_ACCEPTABLE)
         except Exception as ex:
             logger.error("# %s exception %s", self.__class__.__name__, ex)
             return Response(data={"Error."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
