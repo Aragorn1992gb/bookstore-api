@@ -3,12 +3,12 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-DELETE_CHOICES = [
-    ("1", _("Sold")),
-    ("2", _("Lost")),
-    ("3", _("Steal")),
-    ("4", _("Destroyed"))
-]
+# DELETE_CHOICES = [
+#     ("1", _("Sold")),
+#     ("2", _("Lost")),
+#     ("3", _("Steal")),
+#     ("4", _("Destroyed"))
+# ]
 
 
 """ Model that contains info about book's author """
@@ -26,6 +26,16 @@ class Editor(models.Model):
     name = models.CharField(max_length=100)
     note = models.CharField(max_length=255, blank=True, null=True)
 
+    class Meta:
+        # Name of the editor is unique
+        constraints = [
+            models.UniqueConstraint(fields=["name"],
+                        name='Author name unique constraint'),
+        ]
+
+        verbose_name = _('Author')
+        verbose_name_plural = _('Authors')
+
     def __str__(self):
         return self.name
 
@@ -39,6 +49,18 @@ class Book(models.Model):
     quantity = models.PositiveIntegerField(default=0)
     editor = models.ForeignKey(Editor, on_delete=models.PROTECT, blank=True, null=True)
     note = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        # Barcode of the book is unique
+        constraints = [
+            models.UniqueConstraint(fields=["isbn"],
+                        name='Book isbn unique constraint'),
+            models.UniqueConstraint(fields=["barcode"],
+                        name='Book barcode unique constraint'),
+        ]
+
+        verbose_name = _('Book')
+        verbose_name_plural = _('Books')
 
     def __str__(self):
         return self.title
