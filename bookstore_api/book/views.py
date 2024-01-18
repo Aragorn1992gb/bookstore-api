@@ -77,16 +77,16 @@ ADD_BOOK_SCHEMA= openapi.Schema(
 class BookView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                 mixins.UpdateModelMixin):
     """
-    View retrieve APIs for the managing of the Book.
+    View retrieve APIs for the managing of the Book
     The GET method return the books list or the details of a specific book, chosen by id
     The PUT and PATCH method allows to update only the quantity of the books
-    Only STOCK_MANAGER and ADMIN users can execute those APIs
+    The fields isbn and barcode must be 13 characters, and uniques
+    Only STOCK_MANAGER user can execute those APIs
     """
     serializer_class = BookSerializer
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,
-                                Or(user_permissions.StockManagerPermission,
-                                user_permissions.AdminPermission))
+                                Or(user_permissions.StockManagerPermission))
     queryset = Book.objects.all()
 
 
@@ -110,6 +110,7 @@ class EditorView(viewsets.GenericViewSet, mixins.ListModelMixin):
     View retrieve APIs for list the Editors
     The GET method return the editors list or the details of a specific editor, chosen by id
     The PUT and PATCH method allows to update the editor
+    The name of the editor must be unique
     Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = EditorSerializer
@@ -164,7 +165,8 @@ class ManageEditorAdminView(viewsets.GenericViewSet, mixins.UpdateModelMixin,
 
 class RemoveBookView(APIView):
     """
-    It is used to decrease the quantity of a certain book or list of books.
+    It is used to decrease the quantity of a certain book or list of books. \n
+    Only STOCK_MANAGER user can execute thus API. \n
     When the quantity is reduced, the history for each book is saved in mongodb.\n\n
     Required parameters are:\n
     id_book -> [Integer] represent the id of the book to decrease
@@ -188,7 +190,7 @@ class RemoveBookView(APIView):
     def post(self, request):
         try:
 
-            mongodb_connection = create_mongo_connection()
+            mongodb_connection, mongo_client = create_mongo_connection()
             collection_history = mongodb_connection.history_book
             collection_notification = mongodb_connection.notification
             routing_key="book_ooo_notifications"
@@ -259,18 +261,16 @@ class RemoveBookView(APIView):
         except Exception as ex:
             logger.error("# %s exception %s", self.__class__.__name__, ex)
             return Response(data={"Error."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        # finally:
-        #     if mongodb_connection is not None:
-        #         logger.info("Close mongo connection")
-        #         mongodb_connection.close()
-        #     if channel is not None:
-        #         logger.info("Close RabbitMQ connection")
-        #         channel.close()
+        finally:
+            if mongo_client is not None:
+                logger.info("Close mongo connection")
+                mongo_client.close()
 
 
 class AddBookView(APIView):
     """
-    It is used to increment books unit to the library.
+    It is used to increment books unit to the library. \n
+    Only STOCK_MANAGER user can execute thus API. \n
     When the quantity is added, the history for each book is saved in mongodb.\n\n
     Required parameters are:\n
     id_book -> [Integer] represent the id of the book to decrease
@@ -299,7 +299,7 @@ class AddBookView(APIView):
                 raise BodyStructureNotAcceptable
             
             with transaction.atomic():
-                mongodb_connection = create_mongo_connection()
+                mongodb_connection, mongo_client = create_mongo_connection()
                 collection_history = mongodb_connection.history_add_book
 
                 for toadd_book in data:
@@ -325,7 +325,7 @@ class AddBookView(APIView):
         except Exception as ex:
             logger.error("# %s exception %s", self.__class__.__name__, ex)
             return Response(data={"Error."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        # finally:
-        #     # if mongodb_connection:
-        #     logger.info("Close mongo connection")
-        #         # mongodb_connection.close()
+        finally:
+            if mongo_client:
+                logger.info("Close mongo connection")
+                mongo_client.close()
