@@ -44,7 +44,7 @@ The environment variables for the PostgreSQL database are placed in three files:
 - **.env.postgres.prod**: for prod enviroment
 
 Choose the environment properly by changing the env variables in the `docker-compose.yaml` file. 
-In the same way, if you want different dockerfile for the various environment, create `dockerfile.test` and `dockerfile` files, for test and prod purpose; then update the `docker-compose.yaml`.
+In the same way, if you want different dockerfile for the various environments, create `dockerfile.test` and `dockerfile` files, for test and prod purpose; then update the `docker-compose.yaml`.
 
 ## Initialize the project
 The bookstore has 2 authorization groups:
