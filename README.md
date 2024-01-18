@@ -4,7 +4,7 @@ The main functionality of these APIs provides the possibility to insert books an
 When a book's quantity goes to 0, an external service notifies the bookstore owner through a pub/sub system.
 
 ## Start the project
-To start the project, execute the following command in a cmd in the main directory of the project:
+To start the project, execute the following command in a cmd, in the main directory of the project:
 ```
 docker-compose up
 ```
@@ -90,6 +90,7 @@ First of all, you need to authenticate the requests with the token of one of the
 
 Then you can execute the APIs, following the Swagger documentation.
 The basic operation to do in order to operate is to create an author using "/book/manage-author" POST API, an editor using "/book/manage-editor" POST API and finally a book using "/book/manage-book" POST API.
+
 ## Architecture
 The project involves the subsequent technologies:
 - Python
