@@ -4,7 +4,7 @@ The main functionality of these APIs provides the possibility to insert books an
 When a book's quantity goes to 0, an external service notifies the bookstore owner through a pub/sub system.
 
 ## Start the project
-To start the project, execute the following command in the main directory of the project:
+To start the project, execute the following command in a cmd in the main directory of the project:
 ```
 docker-compose up
 ```
@@ -108,17 +108,17 @@ PgAdmin is commente don docker compose. You can uncomment it to use for analyze 
 <br>
 
 #### MongoDB
-MongoDB is used for Data Warehouse purposes and to keep notifications "sent" or "to be sent" to the external notification-service.
+MongoDB is used for Data Warehouse purposes and to keep notifications "sent" or "to be sent" to the external service-notifier.
 Quantity of books added or removed is keeped on MongoDB. This choice has been done in order to grant the best condition for Data Warehouse analysis and isolate the data between projects. This project need just to keep track of the book stocked, not sold. I suppose that when the bookstore owner print the receipt, automatically the book is decreased in the "quantity" field of the PostgreSQL book table, no need nothing else. But it is important to keep track of the removed book (that can be removed for different purpose, not only if sold). All of those details are stored in MongoDB and can be integrated with other project/tools.
-MongoDB also stores notification "sent" or "not sent" to the notification-service. In this way, if the Pub/Sub engine is not working, the notification is stored as "delivered=no"
+MongoDB also stores notification "sent" or "not sent" to the service-notifier. In this way, if the Pub/Sub engine is not working, the notification is stored as "delivered=no"
 The collections are:
 - **history_book**: contains details about removed books
 - **history_add_book**: contains details about inserted books
-- **notification**: contains the notification "published" or "not published" on RabbitMQ, the pub/sub service that interacts with the notification-service.
+- **notification**: contains the notification "published" or "not published" on RabbitMQ, the pub/sub service that interacts with the service-notifier.
 <br>
 
 #### RabbitMQ
-RabbitMQ is used as a pub/sub service for the integration with the notification-service. When a book is out of stock, a message in the queue "book_ooo_notifications" is sent and can be consumed by the notification-service.
+RabbitMQ is used as a pub/sub service for the integration with the service-notifier. When a book is out of stock, a message in the queue "book_ooo_notifications" is sent and can be consumed by the service-notifier.
 You can access to the RabbitMQ console from:
 >http://localhost:15672/ <br>
 > username: guest <br>
