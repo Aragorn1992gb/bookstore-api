@@ -89,7 +89,6 @@ You can analyze the database through PgAdmin:
 > http://localhost:5055/browser/ <br>
 > user: admin@admin.com <br>
 > passsword: root
-
 <br>
 
 #### MongoDB
