@@ -104,7 +104,7 @@ PostgreSQL is used to store the details of the Books, Authors, and Editors. This
 PgAdmin is commente don docker compose. You can uncomment it to use for analyze the database:
 > http://localhost:5055/browser/ <br>
 > user: admin@admin.com <br>
-> passsword: root
+> password: root
 <br>
 
 #### MongoDB
@@ -122,7 +122,7 @@ RabbitMQ is used as a pub/sub service for the integration with the notification-
 You can access to the RabbitMQ console from:
 >http://localhost:15672/ <br>
 > username: guest <br>
-> passowrd: guest
+> password: guest
 
 #### Test
 You can run Unit Tests made on the book app. To run, you should go inside the docker container bookstore-api-backend-1, inside the "bookstore_api" folder and execute:
