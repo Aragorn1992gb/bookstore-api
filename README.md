@@ -85,7 +85,7 @@ The project involves the subsequent technologies:
 
 #### PostgreSQL
 PostgreSQL is used to store the details of the Books, Authors, and Editors. This is a rudimental project, so it is enough just to create a field called "quatity" in the book table to keep track of the remaining quantity for each book. Every book has a foreign key to author and editor tables. 
-You can analyze the database through PgAdmin:
+PgAdmin is commente don docker compose. You can uncomment it to use for analyze the database:
 > http://localhost:5055/browser/ <br>
 > user: admin@admin.com <br>
 > passsword: root
@@ -111,3 +111,6 @@ You can run Unit Tests made on the book app. To run, you should go inside the do
 ```
 python manage.py test book
 ```
+
+#### Note
+If you have conflicts between containers, just remove the containers in your pc and start agian "docker-compose up". If other issues persists, try to make a "docker-compose build" and "docker-compose up" again.
