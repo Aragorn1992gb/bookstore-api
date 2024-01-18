@@ -49,7 +49,7 @@ class BookUpdateAdminSerializer(serializers.ModelSerializer):
 
 class RemoveBookSerializer(serializers.Serializer):
     """
-    Serializers class for update history of the book on mongodb
+    Serializers class for remove book. Used for validate the update history of the book on mongodb
     """
     id_book = serializers.IntegerField()
     quantity = serializers.IntegerField()
@@ -66,6 +66,24 @@ class RemoveBookSerializer(serializers.Serializer):
         if attrs["reason"] not in REASON_TYPE_CHOICES:
             raise serializers.ValidationError({"reason": "you can select a reason that exists "
                                                 f"in this list {REASON_TYPE_CHOICES}"})
+        if attrs["quantity"] <= 0:
+            raise serializers.ValidationError({"quantity": "you must choose a quantity >0"})
+        return attrs
+        
+
+class AddBookSerializer(serializers.Serializer):
+    """
+    Serializers class for increment books unit to the library
+    """
+    id_book = serializers.IntegerField()
+    quantity = serializers.IntegerField()
+
+    class Meta:
+        fields = "__all__"
+        read_only_fields =('id',)
+
+    """ Fields Validation of the AddBookSerializer"""
+    def validate(self, attrs):
         if attrs["quantity"] <= 0:
             raise serializers.ValidationError({"quantity": "you must choose a quantity >0"})
         return attrs
