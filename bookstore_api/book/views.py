@@ -13,11 +13,13 @@ from rest_condition import Or
 from rest_framework.views import APIView
 
 from accounts import permissions as user_permissions
+from bookstore_api.services import create_mongo_connection, create_rabbitmq_connection, \
+        publish_notification, save_notification_on_mongo
+from bookstore_api.exceptions import NotEnoughQuantity, BodyStructureNotAcceptable
 from .models import Book, Author, Editor
 from .serializers import BookSerializer, AuthorSerializer, EditorSerializer, \
-     BookUpdateAdminSerializer, RemoveBookSerializer
+     BookUpdateAdminSerializer, RemoveBookSerializer, AddBookSerializer
 
-from .services import create_mongo_connection
 
 logger = logging.getLogger('book views')
 logger.setLevel(logging.INFO)
@@ -50,6 +52,27 @@ REMOVE_BOOK_SCHEMA= openapi.Schema(
     }
 )
 
+ADD_BOOK_SCHEMA_SINGLE= openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'id_book': openapi.Schema(type=TYPE_INTEGER),
+        'quantity': openapi.Schema(type=TYPE_INTEGER)
+    })
+
+"""
+Schema of the customized view.
+This schema will be taken by swagger in order to describe the input of add-book
+"""
+ADD_BOOK_SCHEMA= openapi.Schema(
+    type=openapi.TYPE_ARRAY,
+    items= {
+        "oneOf": [
+            ADD_BOOK_SCHEMA_SINGLE,
+            ADD_BOOK_SCHEMA_SINGLE
+        ]
+    }
+)
+
 
 class BookView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin,
                 mixins.UpdateModelMixin):
@@ -60,10 +83,10 @@ class BookView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
     Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = BookSerializer
-    authentication_classes = (authentication.TokenAuthentication,
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,
                                 Or(user_permissions.StockManagerPermission,
                                 user_permissions.AdminPermission))
-    permission_classes = (permissions.IsAuthenticated,)
     queryset = Book.objects.all()
 
 
@@ -75,10 +98,10 @@ class AuthorView(viewsets.GenericViewSet, mixins.ListModelMixin):
     Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = AuthorSerializer
-    authentication_classes = (authentication.TokenAuthentication,
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,
                                 Or(user_permissions.StockManagerPermission,
                                 user_permissions.AdminPermission))
-    permission_classes = (permissions.IsAuthenticated,)
     queryset = Author.objects.all()
 
 
@@ -90,10 +113,10 @@ class EditorView(viewsets.GenericViewSet, mixins.ListModelMixin):
     Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = EditorSerializer
-    authentication_classes = (authentication.TokenAuthentication,
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,
                                 Or(user_permissions.StockManagerPermission,
                                 user_permissions.AdminPermission))
-    permission_classes = (permissions.IsAuthenticated,)
     queryset = Editor.objects.all()
 
 
@@ -156,7 +179,7 @@ class RemoveBookView(APIView):
 
     @swagger_auto_schema(request_body=REMOVE_BOOK_SCHEMA,
         responses={status.HTTP_200_OK: "'Books removed succesfully. History stored'. "
-                    "Everything is ok, book quantity is decreased but the history record is saved on mongodb",
+                    "Everything is ok, book quantity is decreased and the history record is saved on mongodb",
                     status.HTTP_406_NOT_ACCEPTABLE: "'Error: body structure not acceptable'. "
                     "The structure of the input json is not acceptable. It can be related to the decimal operator (should be dot)"
                     "or to the wrong attributes given. \n 'Error: quantity to decrease must be >= to the current quantity'. "
@@ -166,18 +189,19 @@ class RemoveBookView(APIView):
         try:
 
             mongodb_connection = create_mongo_connection()
-            collection = mongodb_connection.history_book
+            collection_history = mongodb_connection.history_book
+            collection_notification = mongodb_connection.notification
+            routing_key="book_ooo_notifications"
 
             with transaction.atomic():
                 data = request.data
 
+                datenow = datetime.utcnow()
                 removebook_serializer = RemoveBookSerializer(data=data, many=True)
                 zero_books = []
 
                 if not removebook_serializer.is_valid():
-                    logger.info(removebook_serializer.errors)
-                    return Response(data={"Error: body structure not acceptable"}, 
-                                    status=status.HTTP_406_NOT_ACCEPTABLE)
+                    raise BodyStructureNotAcceptable
 
                 document_list = []
 
@@ -185,37 +209,123 @@ class RemoveBookView(APIView):
                     book = Book.objects.get(id=torem_book["id_book"])
                     new_quantity = book.quantity - torem_book["quantity"]
                     if new_quantity <0:
-                        print("### a")
-                        logger.error("### %s exception: quantity to decrease must be >= "
-                                        "to the current quantity", self.__class__.__name__)
-                        return Response(data={"Error: quantity to decrease must be >= to the "
-                                        "current quantity"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+                        raise NotEnoughQuantity
                     book.quantity = new_quantity
                     book.save()
                     if new_quantity == 0:
                         zero_books.append(book.id)
 
-                    document_list.append({"book_id": torem_book["id_book"], "book": book.title,
+                    document_list.append({"book_id": torem_book["id_book"],
+                                            "book": book.title,
                                             "single_price": torem_book["single_price"],
-                                            "timestamp": datetime.now(), "quantity": torem_book["quantity"],
-                                            "reason": torem_book["reason"], "note": torem_book["note"]})
-                    # collection.insert_one({"book_id": torem_book["id_book"], "book": book.title, "single_price": torem_book["single_price"], "timestamp": datetime.now(), "quantity": torem_book["quantity"], "reason": torem_book["reason"], "note": torem_book["note"]})
-                
+                                            "timestamp": datenow,
+                                            "quantity": torem_book["quantity"],
+                                            "reason": torem_book["reason"],
+                                            "note": torem_book["note"]})
+                    # collection_history.insert_one({"book_id": torem_book["id_book"], "book": book.title, "single_price": torem_book["single_price"], "timestamp": datetime.now(), "quantity": torem_book["quantity"], "reason": torem_book["reason"], "note": torem_book["note"]})
+
                 # Mongodb doesn't born with the aim to be compliant to ACID. In order to avoid transaction, that are not in Mongo's nature, I use insert_many after every operation on postgresql is made (outside the for loop)
                 # If something wrong on postgresql, an ecception is sent and it doesn't execute insert_many. If insert_many has exeption, it sent an Exception and, thanks to "with transaction.atomic():", operation are reverted on Postgresql.
-                collection.insert_many(document_list)
+                collection_history.insert_many(document_list)
 
-                # TODO when the microservice is ready, it will be called from here for each book with quantity = 0. Ideally, the service will expose an API and all the requests
-                # to this api will be put in a Queue (for example in a cloud task). I assume that the request is a GET, with a query parameter with the id of the book.
-                # In this case the service notifire has the id of the book and it can get all the info of the book using the api /book/{id}, but a it is possible to create a notifier-service
-                # that accept more input parameters, in order to already get the info of the books. This approach is useful if the notification is sent immediately. If the notification is sent
-                # after days, the book details may change (for example the stock manager add more quantity).
+                # For every upgraded book to 0, it push a message on RabbitMQ to
+                # allow the notification server to consume the message and send the notification.
+                # The notification is also saved on django in order to be stored
+                # in case RabbitMQ is unavailable
                 for zb in zero_books:
-                    logging.info("## Book %s to be ordered", zb)
-                    # task_module.create_task_get(f"{service_notifier_api}?id_book={zb}", self.context["request"].META.get('HTTP_AUTHORIZATION'), os.environ.get('QUEUE'))
-
-                return Response(data="Books removed succesfully. History stored", status=status.HTTP_200_OK)
-
+                    body=f"Book no#'{zb}' is out of stock!"
+                    logging.info("## Book %s to be booked - %s", zb, datenow)
+                    try:
+                        channel = create_rabbitmq_connection()
+                        publish_notification(channel, routing_key, body)
+                        save_notification_on_mongo(body, collection_notification, datenow, "yes")
+                    except:
+                        logger.error("# RabbitMQ is unavailable")
+                        # In case RabbitMQ is unavailable, the notify is sent to Mongo as "Not delivered"
+                        save_notification_on_mongo(body, collection_notification, datenow, "no")
+                        pass
+                return Response(data={"Books removed succesfully. History stored"},
+                            status=status.HTTP_200_OK)
+        except NotEnoughQuantity:
+            logger.error("# %s exception: quantity to decrease must be >= "
+                                        "to the current quantity", self.__class__.__name__)
+            return Response(data={"Error: Not Enough quantity. Quantity to decrease must "
+                                    "be >= to the current quantity?"},
+                                    status=status.HTTP_406_NOT_ACCEPTABLE)
+        except BodyStructureNotAcceptable:
+            logger.error(removebook_serializer.errors)
+            return Response(data={"Error: body structure not acceptable"},
+                                    status=status.HTTP_406_NOT_ACCEPTABLE)
         except Exception as ex:
             logger.error("# %s exception %s", self.__class__.__name__, ex)
-            return Response(data={"Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(data={"Error."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # finally:
+        #     if mongodb_connection is not None:
+        #         logger.info("Close mongo connection")
+        #         mongodb_connection.close()
+        #     if channel is not None:
+        #         logger.info("Close RabbitMQ connection")
+        #         channel.close()
+
+
+class AddBookView(APIView):
+    """
+    It is used to increment books unit to the library.
+    When the quantity is added, the history for each book is saved in mongodb.\n\n
+    Required parameters are:\n
+    id_book -> [Integer] represent the id of the book to decrease
+    quantity -> [Integer] the quantity to add (must be a number >0)
+    """
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated, user_permissions.StockManagerPermission)
+    serialzier = AddBookSerializer
+
+    @swagger_auto_schema(request_body=ADD_BOOK_SCHEMA,
+        responses={status.HTTP_200_OK: "'Books add succesfully. History stored'. "
+                    "Everything is ok, book quantity is added and the history record is saved on mongodb",
+                    status.HTTP_406_NOT_ACCEPTABLE: "'Error: body structure not acceptable'. "
+                    "The structure of the input json is not acceptable. It can be related to the decimal operator (should be dot)"
+                    "or to the wrong attributes given. \n 'Error: quantity to add must be >= 0'. "})
+
+    def post(self, request):
+        try:
+            data = request.data
+
+            datenow = datetime.utcnow()
+            addbook_serializer = AddBookSerializer(data=data, many=True)
+            document_list = []
+
+            if not addbook_serializer.is_valid():
+                raise BodyStructureNotAcceptable
+            
+            with transaction.atomic():
+                mongodb_connection = create_mongo_connection()
+                collection_history = mongodb_connection.history_add_book
+
+                for toadd_book in data:
+                    book = Book.objects.get(id=toadd_book["id_book"])
+                    book.quantity = book.quantity + toadd_book["quantity"]
+                    book.save()
+
+                document_list.append({"book_id": toadd_book["id_book"],
+                                        "book": book.title,
+                                        "timestamp": datenow,
+                                        "quantity": toadd_book["quantity"],
+                                    })
+                
+                collection_history.insert_many(document_list)
+
+                return Response(data={"Books added succesfully. History stored"},
+                            status=status.HTTP_200_OK)
+
+        except BodyStructureNotAcceptable:
+            logger.error(addbook_serializer.errors)
+            return Response(data={"Error: body structure not acceptable"},
+                                    status=status.HTTP_406_NOT_ACCEPTABLE)
+        except Exception as ex:
+            logger.error("# %s exception %s", self.__class__.__name__, ex)
+            return Response(data={"Error."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # finally:
+        #     # if mongodb_connection:
+        #     logger.info("Close mongo connection")
+        #         # mongodb_connection.close()

@@ -12,3 +12,4 @@ django-admin-shortcuts
 rest_condition
 whitenoise # for staticfiles when DEBUG = False
 pymongo
+pika # library for RabbitMQ integration
