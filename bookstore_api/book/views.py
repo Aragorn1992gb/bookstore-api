@@ -83,10 +83,10 @@ class BookView(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveMo
     Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = BookSerializer
-    authentication_classes = (authentication.TokenAuthentication,
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,
                                 Or(user_permissions.StockManagerPermission,
                                 user_permissions.AdminPermission))
-    permission_classes = (permissions.IsAuthenticated,)
     queryset = Book.objects.all()
 
 
@@ -98,10 +98,10 @@ class AuthorView(viewsets.GenericViewSet, mixins.ListModelMixin):
     Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = AuthorSerializer
-    authentication_classes = (authentication.TokenAuthentication,
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,
                                 Or(user_permissions.StockManagerPermission,
                                 user_permissions.AdminPermission))
-    permission_classes = (permissions.IsAuthenticated,)
     queryset = Author.objects.all()
 
 
@@ -113,10 +113,10 @@ class EditorView(viewsets.GenericViewSet, mixins.ListModelMixin):
     Only STOCK_MANAGER and ADMIN users can execute those APIs
     """
     serializer_class = EditorSerializer
-    authentication_classes = (authentication.TokenAuthentication,
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,
                                 Or(user_permissions.StockManagerPermission,
                                 user_permissions.AdminPermission))
-    permission_classes = (permissions.IsAuthenticated,)
     queryset = Editor.objects.all()
 
 
