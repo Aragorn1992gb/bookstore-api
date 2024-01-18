@@ -104,7 +104,7 @@ PostgreSQL is used to store the details of the Books, Authors, and Editors. This
 PgAdmin is commente don docker compose. You can uncomment it to use for analyze the database:
 > http://localhost:5055/browser/ <br>
 > user: admin@admin.com <br>
-> passsword: root
+> password: root
 <br>
 
 #### MongoDB
