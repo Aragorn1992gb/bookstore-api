@@ -24,7 +24,7 @@ During the process, the script `entrypoint.sh` is called, which will:
 
 Note that there might be an issue that lets this file not be read correctly. This issue is caused because on Windows, the break line is CRLF and not LF. This should be fixed by the file `.gitattributes`. If the issue persists, open the file with an IDE like Visual Studio and change the break line with LF, as shown in this image.
 
-[1]
+![1](https://github.com/Aragorn1992gb/bookstore-api/assets/63260164/f0c9c531-a14b-4df3-95f8-3f486db5eb75)
 <br>
 
 #### Different environments
@@ -58,11 +58,20 @@ from
 > http://localhost:8000/admin/
 
 and create 2 users to be associated with respectively STOCK_MANAGER and ADMIN group:
-[2]
-[3]
-From each of those users generate a token:
-[4]
-and use this token to authenticate the request.
+
+![image](https://github.com/Aragorn1992gb/bookstore-api/assets/63260164/998947c4-0503-4496-bf17-450c4a4be364)
+
+-> Save and continue edit. Put the group:
+
+![image](https://github.com/Aragorn1992gb/bookstore-api/assets/63260164/475decc5-adb0-47ff-9ad3-42677d99071d)
+
+
+From each of those users generate a token and click save.
+
+![image](https://github.com/Aragorn1992gb/bookstore-api/assets/63260164/d76d1a01-834b-427d-a427-c0ef95a5809b)
+
+
+Use this token to authenticate the request.
 
 It is a rudimental software, so the users must be set from the admin, I don't provide APIs for registration.
 
@@ -70,8 +79,10 @@ It is a rudimental software, so the users must be set from the admin, I don't pr
 The APIs are documented in Swagger:
 > http://localhost:8000/swagger
 
-First of all, you need to authenticate the requests with the token of one of the 2 users created; it depends on the call that you want to make:
-[5]
+First of all, you need to authenticate the requests with the token of one of the 2 users created; it depends on the call that you want to make. Just click on "Authenticate" and put "Token " + the value of the token:
+
+![image](https://github.com/Aragorn1992gb/bookstore-api/assets/63260164/d15a4f81-4fb5-40eb-b461-60969b5a8b65)
+
 Then you can execute the APIs, following the Swagger documentation.
 The basic operation to do in order to operate is to create an author using "/book/author" POST API, an editor using "/book/editor" POST API and finally a book using "/book/book" POST API.
 ## Architecture
