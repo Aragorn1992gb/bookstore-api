@@ -15,7 +15,7 @@ logger.addHandler(handler)
 def create_mongo_connection():
     client = MongoClient(os.getenv("MONGO_URL"), int(os.getenv("MONGO_PORT")))
     mongodb_connection = client.mongo_bookstore
-    return mongodb_connection
+    return mongodb_connection, client
 
 
 """ Enstablish a connection to RabbitMQ """
