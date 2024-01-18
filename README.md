@@ -27,7 +27,7 @@ Note that there might be an issue that lets this file not be read correctly. Thi
 [1]
 <br>
 
-####Different environments
+#### Different environments
 The git code follows the GitFlow guidelines. There are 3 main branches:
 - **Dev**: used for development
 - **Test**: used for test
