@@ -88,7 +88,7 @@ First of all, you need to authenticate the requests with the token of one of the
 ![image](https://github.com/Aragorn1992gb/bookstore-api/assets/63260164/8c337c56-cccd-4f02-a118-a7051405d6dc)
 
 Then you can execute the APIs, following the Swagger documentation.
-The basic operation to do in order to operate is to create an author using "/book/author" POST API, an editor using "/book/editor" POST API and finally a book using "/book/book" POST API.
+The basic operation to do in order to operate is to create an author using "/book/manage-author" POST API, an editor using "/book/manage-editor" POST API and finally a book using "/book/manage-book" POST API.
 ## Architecture
 The project involves the subsequent technologies:
 - Python
