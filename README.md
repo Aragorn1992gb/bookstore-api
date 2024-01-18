@@ -91,6 +91,7 @@ You can analyze the database through PgAdmin:
 > passsword: root
 
 <br>
+
 #### MongoDB
 MongoDB is used for Data Warehouse purposes and to keep notifications "sent" or "to be sent" to the external notification-service.
 Quantity of books added or removed is keeped on MongoDB. This choice has been done in order to grant the best condition for Data Warehouse analysis and isolate the data between projects. This project need just to keep track of the book stocked, not sold. I suppose that when the bookstore owner print the receipt, automatically the book is decreased in the "quantity" field of the PostgreSQL book table, no need nothing else. But it is important to keep track of the removed book (that can be removed for different purpose, not only if sold). All of those details are stored in MongoDB and can be integrated with other project/tools.
