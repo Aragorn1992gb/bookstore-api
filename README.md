@@ -73,6 +73,7 @@ The APIs are documented in Swagger:
 First of all, you need to authenticate the requests with the token of one of the 2 users created; it depends on the call that you want to make:
 [5]
 Then you can execute the APIs, following the Swagger documentation.
+The basic operation to do in order to operate is to create an author using "/book/author" POST API, an editor using "/book/editor" POST API and finally a book using "/book/book" POST API.
 ## Architecture
 The project involves the subsequent technologies:
 - Python
