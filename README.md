@@ -120,7 +120,9 @@ The collections are:
 #### RabbitMQ
 RabbitMQ is used as a pub/sub service for the integration with the notification-service. When a book is out of stock, a message in the queue "book_ooo_notifications" is sent and can be consumed by the notification-service.
 You can access to the RabbitMQ console from:
->http://localhost:15672/
+>http://localhost:15672/ <br>
+> username: guest <br>
+> passowrd: guest
 
 #### Test
 You can run Unit Tests made on the book app. To run, you should go inside the docker container bookstore-api-backend-1, inside the "bookstore_api" folder and execute:
