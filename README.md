@@ -43,7 +43,8 @@ The environment variables for the PostgreSQL database are placed in three files:
 - **.env.postgres.test**: for test environment
 - **.env.postgres.prod**: for prod enviroment
 
-Choose the environment properly by changing the env variables in the `docker-compose.yaml` file.
+Choose the environment properly by changing the env variables in the `docker-compose.yaml` file. 
+In the same way, if you want different dockerfile for the various environment, create `dockerfile.test` and `dockerfile` files, for test and prod purpose; then update the `docker-compose.yaml`.
 
 ## Initialize the project
 The bookstore has 2 authorization groups:
@@ -130,4 +131,4 @@ You can run Unit Tests made on the book app. To run, you should go inside the do
 python manage.py test book
 ```
 #### Note
-If you have conflicts between containers, just remove the containers in your pc and start agian "docker-compose up". If other issues persists, try to make a "docker-compose build" and "docker-compose up" again.
+If you have conflicts between containers, just remove the containers in your pc and start again "docker-compose up". If other issues persists, try to make a "docker-compose build" and "docker-compose up" again.
